@@ -9,7 +9,16 @@ data, and PostgreSQL's *PostGIS* extension.
 
 It helps you pick restaurants around Paris' neighbourhood *La Butte aux Cailles*, by type.
 
-### Installation
+## Prerequesites
+
+minimum dependencies:
+
+* Elixir 1.6
+* Erlang OTP 20.2
+* PostgreSQL 9.6
+* PostGIS 2.3.3
+
+## Configuration
 
 You need to export the following environment variables:
 
@@ -20,3 +29,9 @@ FOURSQUARE_SECRET
 BTFL_APPID
 BTFL_APPKEY
 ```
+
+## Installation
+
+1. Install the dependencies with `mix deps.get`
+2. Create and migrate the database models with `mix ecto.setup`
+4. Launch the application with `iex -S mix`
