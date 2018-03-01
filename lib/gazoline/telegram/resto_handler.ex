@@ -44,14 +44,17 @@ defmodule Gazoline.Telegram.RestoHandler do
     Nadia.send_message(id, "Graw <3")
   end
 
-  defp parse(_message, id) do
-    # results = Botfuel.classify(message)
-    categories = ["Fast Food", "Mexican","Ethiopian", "Bakery", "Basque",
-                  "Bistro / Café", "Italian", "Coffee Shop", "Asian", "Middle Eastern",
-                  "Vegetarian / Vegan", "Hotel Bar", "Restaurant"]
+  defp parse(message, id) do
+    case Botfuel.classify(message) do
+      {:ok, %Botfuel.Classify{answer: anwser}} ->
+        categories = ["Fast Food", "Mexican","Ethiopian", "Bakery", "Basque",
+                      "Bistro / Café", "Italian", "Coffee Shop", "Asian", "Middle Eastern",
+                      "Vegetarian / Vegan", "Hotel Bar", "Restaurant"]
 
-    keyboards = categories |> Enum.chunk_every(1) |> Enum.map(fn chunk -> Enum.map(chunk, fn cat -> %{callback_data: "/foodtype #{cat}", text: cat} end) end)
-
-    Nadia.send_message id, "Your choice?", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards}
+        keyboards = categories |> Enum.chunk_every(1) |> Enum.map(fn chunk -> Enum.map(chunk, fn cat -> %{callback_data: "/foodtype #{cat}", text: cat} end) end)
+        Nadia.send_message id, "Your choice?", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards}
+      {:error, error} ->
+        Logger.error "Nah something went wrong with the platform"
+    end
   end
 end
