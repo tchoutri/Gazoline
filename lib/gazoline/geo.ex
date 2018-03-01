@@ -34,7 +34,7 @@ defmodule Gazoline.Geo do
   end
 
   def nth_closests(n) do
-    from restaurant in Restaurant, limit: ^n, select: %{id: restaurant.id, distance: st_distance(restaurant.geom, ^@telecom), name: restaurant.name, category: restaurant.category, address: restaurant.address}, order_by: :geom
+    from restaurant in Restaurant, limit: ^n, select: %{fsquare: restaurant.fsquare, id: restaurant.id, distance: st_distance(restaurant.geom, ^@telecom), name: restaurant.name, category: restaurant.category, address: restaurant.address}, order_by: :geom
   end
 
   def nth_closests(n, "Asian") do

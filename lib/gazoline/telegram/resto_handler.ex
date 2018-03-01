@@ -24,8 +24,8 @@ defmodule Gazoline.Telegram.RestoHandler do
   end
 
 
-  defp parse_callback("/restaurant " <> resto_id, id) do
-    case Repo.get(Restaurant, resto_id) do
+  defp parse_callback("/restaurant " <> venue_id, id) do
+    case Repo.get_by(Restaurant, fsquare: venue_id) do
       nil -> nil
       %Restaurant{}=resto ->
         :ok         = Nadia.send_chat_action(id, "typing")
@@ -34,10 +34,15 @@ defmodule Gazoline.Telegram.RestoHandler do
     end
   end
 
-  defp parse_callback("/foodtype " <> foodtype, id) do
-    closests  = Repo.all(Geo.nth_closests(5, foodtype)) |> Enum.map(fn resto -> %{id: resto.id, text: resto.name <> " — " <> resto.address} end)
-    keyboards = closests |> Enum.chunk_every(1) |> Enum.map(fn chunk -> Enum.map(chunk, fn resto -> %{callback_data: "/restaurant #{resto.id}", text: resto.text} end) end)
-    {:ok, _} = Nadia.send_message(id, "Here are the restaurants for your pick: ", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards})
+  defp parse_callback("/category " <> category, id) do
+    closests  = Repo.all(Geo.nth_closests(5, category)) |> Enum.map(fn resto -> %{fsquare: resto.fsquare, text: resto.name <> " — " <> resto.address} end)
+    keyboards = closests |> Enum.chunk_every(1) |> Enum.map(fn chunk -> Enum.map(chunk, fn resto -> %{callback_data: "/restaurant #{resto.fsquare}", text: resto.text} end) end)
+    case keyboards do
+      [] ->
+        Nadia.send_message(id, "Sorry, no restaurants for this category")
+      _  ->
+        {:ok, _} = Nadia.send_message(id, "Here are the restaurants for your pick: ", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards})
+    end
   end
 
 
@@ -56,17 +61,17 @@ defmodule Gazoline.Telegram.RestoHandler do
   end
 
   defp send_categories("Snack", id) do
-    categories = ["Fast Food", "Mexican", "Bakery", "Bistro / Café", "Coffee Shop"]
-    keyboards = categories |> Enum.chunk_every(1) |> Enum.map(fn chunk -> Enum.map(chunk, fn cat -> %{callback_data: "/foodtype #{cat}", text: cat} end) end)
+    categories = ["Fast Food", "Mexican", "Bakery", "Café / Bistro", "Coffee Shop"]
+    keyboards = categories |> Enum.chunk_every(1) |> Enum.map(fn chunk -> Enum.map(chunk, fn cat -> %{callback_data: "/category #{cat}", text: cat} end) end)
     Nadia.answer_callback_query(id)
     Nadia.send_message id, "Here you are", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards}
   end
 
   defp send_categories("Real", id) do
-    categories = ["Mexican", "Ethiopian", "Fast Food", "Basque", "Bistro / Café",
+    categories = ["Mexican", "Ethiopian", "Fast Food", "Basque", "Café / Bistro",
                   "Italian", "Asian", "Middle-Eastern", "Vegetarian / Vegan", "Hotel Bar",
                   "Restaurant"]
-    keyboards = categories |> Enum.chunk_every(1) |> Enum.map(fn chunk -> Enum.map(chunk, fn cat -> %{callback_data: "/foodtype #{cat}", text: cat} end) end)
+    keyboards = categories |> Enum.chunk_every(1) |> Enum.map(fn chunk -> Enum.map(chunk, fn cat -> %{callback_data: "/category #{cat}", text: cat} end) end)
     Nadia.answer_callback_query(id)
     Nadia.send_message id, "You're all set!", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards}
   end
