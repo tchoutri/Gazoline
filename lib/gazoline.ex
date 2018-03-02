@@ -3,16 +3,7 @@ defmodule Gazoline do
   Documentation for Gazoline.
   """
 
-  @doc """
-  Hello world.
+  defmodule Release do
 
-  ## Examples
-
-      iex> Gazoline.hello
-      :world
-
-  """
-  def hello do
-    :world
   end
 end

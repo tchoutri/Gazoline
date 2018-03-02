@@ -25,6 +25,7 @@ defmodule Gazoline.MixProject do
     [
       {:bees, "~> 0.3"},
       {:botfuel, github: "tchoutri/botfuel-elixir-sdk"},
+      {:distillery, "~> 1.5.2"},
       {:ecto, "~> 2.2"},
       {:geo, "~> 2.1"},
       {:geo_postgis, "~> 1.1"},

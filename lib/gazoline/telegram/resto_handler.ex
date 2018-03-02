@@ -4,6 +4,7 @@ defmodule Gazoline.Telegram.RestoHandler do
   alias Gazoline.{Repo, Geo, Restaurant}
   require Logger
 
+
   def start_link(_) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
@@ -15,6 +16,7 @@ defmodule Gazoline.Telegram.RestoHandler do
 
   def handle_cast({:tg_update, update}, state) do
     cond do
+      update.edited_message != nil -> parse(update.edited_message.text, update.message.chat.id)
       update.callback_query != nil -> parse_callback(update.callback_query.data, update.callback_query.message.chat.id)
       update.message.text == "/start" -> display_menus(update.message.chat.id)
       update.message != nil -> parse(update.message.text, update.message.chat.id)
@@ -41,7 +43,7 @@ defmodule Gazoline.Telegram.RestoHandler do
       [] ->
         Nadia.send_message(id, "Sorry, no restaurants for this category")
       _  ->
-        {:ok, _} = Nadia.send_message(id, "Here are the restaurants for your pick: ", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards})
+        {:ok, _} = Nadia.send_message(id, "Check out those", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards})
     end
   end
 
@@ -52,6 +54,39 @@ defmodule Gazoline.Telegram.RestoHandler do
 
   defp parse("/graw" <> _, id) do
     Nadia.send_message(id, "Graw <3")
+  end
+
+  defp parse(message, id) do
+    result = case Botfuel.classify(message) do
+              [] ->
+                {:error, :nocommand}
+              results ->
+                hd(results) |> Map.get(:answer) |> parse_a
+            end
+
+    case result do
+      {:ok, :display_menus} ->
+        display_menus(id)
+      {:ok, category} when is_binary(category) ->
+        Logger.debug(inspect category)
+        parse_callback("/category " <> category, id)
+      {:error, :wtf} ->
+        Logger.warn "Wooops, I didn't understand."
+      {:error, :nocommand} ->
+        Logger.warn "Wooops, I didn't understand."
+      error -> Logger.error "Unmatched error: " <> (inspect error)
+    end
+  end
+
+  defp parse_a(json) do
+
+    case Jason.decode!(json) |> Map.get("result") do
+      "choice" -> {:ok, :display_menus}
+      category when category in ["Mexican", "Ethiopian", "Fast Food", "Basque", "Café / Bistro",
+                                 "Italian", "Asian", "Middle-Eastern", "Vegetarian / Vegan", "Hotel Bar",
+                                 "Restaurant", "Fast Food", "Mexican", "Bakery", "Café / Bistro", "Coffee Shop"] -> {:ok, category}
+      _ -> {:error, :wtf}
+    end
   end
 
   defp display_menus(id) do
@@ -75,4 +110,5 @@ defmodule Gazoline.Telegram.RestoHandler do
     Nadia.answer_callback_query(id)
     Nadia.send_message id, "You're all set!", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards}
   end
+
 end
