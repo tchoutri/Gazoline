@@ -53,7 +53,7 @@ defmodule Gazoline.Geo do
                                       (r.category == "Estaminet") or (r.category == "Café")
   end
 
-  def nth_closests(n, category) do
+  def nth_closests(n, category) when is_binary(category) do
     from r in nth_closests(n), where: r.category == ^category
   end
 
