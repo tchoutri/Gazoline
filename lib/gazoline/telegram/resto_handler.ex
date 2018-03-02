@@ -85,7 +85,9 @@ defmodule Gazoline.Telegram.RestoHandler do
       category when category in ["Mexican", "Ethiopian", "Fast Food", "Basque", "Café / Bistro",
                                  "Italian", "Asian", "Middle-Eastern", "Vegetarian / Vegan", "Hotel Bar",
                                  "Restaurant", "Fast Food", "Mexican", "Bakery", "Café / Bistro", "Coffee Shop"] -> {:ok, category}
-      _ -> {:error, :wtf}
+      msg -> 
+        Logger.debug("Couldn't understand #{inspect msg}")
+        {:error, :wtf}
     end
   end
 
