@@ -10,7 +10,7 @@ use Mix.Releases.Config,
     # This sets the default release built by `mix release`
     default_release: :default,
     # This sets the default environment used by `mix release`
-    default_environment: Mix.env()
+    default_environment: :prod
 
 # For a full list of config options for both releases
 # and environments, visit https://hexdocs.pm/distillery/configuration.html
@@ -46,6 +46,10 @@ end
 
 release :gazoline do
   set version: current_version(:gazoline)
+  set commands: [
+    "migrate": "rel/commands/migrate.sh"
+  ]
+
   set applications: [
     :runtime_tools
   ]
