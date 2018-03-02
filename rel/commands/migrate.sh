@@ -1,3 +1,3 @@
 #!/bin/sh
 
-"$RELEASE_ROOT_DIR"/bin/hecateros command Elixir.Gazoline.Release seed
+"$RELEASE_ROOT_DIR"/bin/gazoline command Elixir.Gazoline.Release seed
