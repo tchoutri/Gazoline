@@ -42,7 +42,7 @@ defmodule Gazoline.Telegram.RestoHandler do
 
   defp parse_callback("/restaurant " <> venue_id, id, callback_id) do
     :ok = Nadia.answer_callback_query(callback_id, text: "~o~")
-    case Geo.get_resto(venue_id: venue_id) do
+    case get_resto(venue_id: venue_id) do
       nil -> nil
       [resto] ->
         {lat, long} = get_lat_long(resto.geom)
