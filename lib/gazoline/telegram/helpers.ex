@@ -1,6 +1,7 @@
 defmodule Gazoline.Telegram.Helpers do
 
-  alias Gazoline.{Geo,Repo}
+  alias Gazoline.Repo
+  import Gazoline.Geo, only: [nth_closests: 2]
   require Logger
 
   def display_menus(id) do
@@ -57,7 +58,7 @@ defmodule Gazoline.Telegram.Helpers do
 
   def build_category(category) when is_binary(category) do
     5
-    |> Geo.nth_closests(category)
+    |> nth_closests(category)
     |> Repo.all
     |> Enum.map(fn resto -> %{fsquare: resto.fsquare, text: resto.name <> " — " <> resto.address} end)
     |> Enum.chunk_every(1)
@@ -70,4 +71,6 @@ defmodule Gazoline.Telegram.Helpers do
   def send_category(keyboards, id) do
     Nadia.send_message(id, "Check out those!", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards})
   end
+
+  def get_lat_long(%Geo.Point{coordinates: {lat, long}}), do: {lat, long}
 end

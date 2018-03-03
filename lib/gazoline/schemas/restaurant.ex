@@ -19,5 +19,7 @@ defmodule Gazoline.Restaurant do
     resto
     |> cast(attrs, [:name, :address, :geom, :category])
     |> validate_required([:name, :address, :geom, :category])
+    |> unique_constraint(:name, name: :restaurants_name_address_index)
+    |> unique_constraint(:fsquare)
   end
 end

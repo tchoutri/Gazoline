@@ -66,11 +66,20 @@ defmodule Gazoline.Geo do
   }
   end
 
-  def get_resto(venue_id: venue_id) do
+  def get_resto([venue_id: venue_id]) do
     telecom = "POINT(#{elem(@telecom.coordinates,0)} #{elem(@telecom.coordinates, 1)})"
     Repo.all from r in Restaurant, where: r.fsquare == ^venue_id,
                               select: %{name: r.name, address: r.address,
                                   distance: fragment("round(cast(ST_Distance(?,ST_GeographyFromText(?)) as numeric),1)", r.geom, ^telecom),
                                   geom: r.geom, fsquare: r.fsquare}
+  end
+
+  def get_resto([approx: string]) do
+    telecom = "POINT(#{elem(@telecom.coordinates,0)} #{elem(@telecom.coordinates, 1)})"
+    Repo.all from r in Restaurant, where: ilike(r.name, ^"%#{string}%"),
+                                  select: %{name: r.name, address: r.address,
+                                            distance: fragment("round(cast(ST_Distance(?,ST_GeographyFromText(?)) as numeric),1)", r.geom, ^telecom),
+                                            geom: r.geom, fsquare: r.fsquare}
+
   end
 end

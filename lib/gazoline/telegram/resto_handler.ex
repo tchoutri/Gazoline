@@ -1,7 +1,8 @@
 defmodule Gazoline.Telegram.RestoHandler do
 
   use GenServer
-  alias Gazoline.{Repo, Restaurant,Geo}
+  alias Gazoline.{Repo, Restaurant}
+  import Gazoline.Geo, only: [get_resto: 1]
   require Logger
   import Gazoline.Telegram.Helpers
 
@@ -20,10 +21,22 @@ defmodule Gazoline.Telegram.RestoHandler do
       update.edited_message != nil -> parse(update.edited_message.text, update.message.chat.id)
       update.callback_query != nil -> parse_callback(update.callback_query.data, update.callback_query.message.chat.id, update.callback_query.id)
       update.message.text == "/start" -> display_menus(update.message.chat.id)
+      "/resto " <> string = update.message.text -> parse_command(:resto, string, update.message.chat.id)
       update.message != nil -> parse(update.message.text, update.message.chat.id)
       true -> nil
     end
     {:noreply, state}
+  end
+
+  defp parse_command(:resto, string, id) do
+    case get_resto(approx: string) do
+      []      -> Nadia.send_message(id, "You're sure it's spelled like that? :/")
+      results -> 
+      Enum.each(results, fn resto ->
+        {lat, long} = get_lat_long(resto.geom)
+        Nadia.send_venue(id, lat, long, "#{resto.name} (#{resto.distance}m)" , resto.address, foursquare_id: resto.fsquare)
+      end)
+    end
   end
 
 
@@ -32,7 +45,7 @@ defmodule Gazoline.Telegram.RestoHandler do
     case Geo.get_resto(venue_id: venue_id) do
       nil -> nil
       [resto] ->
-        {lat, long} = resto.geom.coordinates
+        {lat, long} = get_lat_long(resto.geom)
         {:ok, _}    =
           Nadia.send_venue(id, lat, long, "#{resto.name} (#{resto.distance}m)" , resto.address, foursquare_id: resto.fsquare)
     end

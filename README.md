@@ -35,3 +35,9 @@ BTFL_APPKEY
 1. Install the dependencies with `mix deps.get`
 2. Create and migrate the database models with `mix ecto.setup`
 4. Launch the application with `iex -S mix`
+
+
+## TODO
+
+- [ ] Expand the search radius.
+- [ ] Don't crash on message edition
