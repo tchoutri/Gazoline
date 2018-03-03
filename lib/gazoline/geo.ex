@@ -18,11 +18,6 @@ defmodule Gazoline.Geo do
     {:ok, client}
   end
 
-  def handle_call({:nth_closests, n}, _from, state) do
-    results = Repo.all nth_closests(n)
-    {:ok, results, state}
-  end
-
   def handle_cast(:populate, client=state) do
     {lat, long} = @telecom.coordinates
     {:ok, venues} = Bees.Venue.category(client, lat, long, @category, "checkin", 50, 800)
@@ -34,7 +29,7 @@ defmodule Gazoline.Geo do
   end
 
   def nth_closests(n) do
-    from restaurant in Restaurant, limit: ^n, select: %{fsquare: restaurant.fsquare, id: restaurant.id, distance: st_distance(restaurant.geom, ^@telecom), name: restaurant.name, category: restaurant.category, address: restaurant.address}, order_by: :geom
+    from restaurant in Restaurant, limit: ^n, select: %{fsquare: restaurant.fsquare, id: restaurant.id, name: restaurant.name, category: restaurant.category, address: restaurant.address}, order_by: st_distance(restaurant.geom, ^@telecom)
   end
 
   def nth_closests(n, "Asian") do
@@ -57,7 +52,7 @@ defmodule Gazoline.Geo do
     from r in nth_closests(n), where: r.category == ^category
   end
 
-  defp venue_to_resto(venue) do
+  def venue_to_resto(venue) do
     [cat] = venue.categories |> Enum.filter(fn v -> v["primary"] == true end)
 
     %Gazoline.Restaurant{

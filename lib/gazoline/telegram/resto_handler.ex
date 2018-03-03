@@ -1,8 +1,9 @@
 defmodule Gazoline.Telegram.RestoHandler do
 
   use GenServer
-  alias Gazoline.{Repo, Geo, Restaurant}
+  alias Gazoline.{Repo, Restaurant}
   require Logger
+  import Gazoline.Telegram.Helpers
 
 
   def start_link(_) do
@@ -52,37 +53,35 @@ defmodule Gazoline.Telegram.RestoHandler do
   end
 
 
-  defp parse("/graw" <> _, id) do
-    Nadia.send_message(id, "Graw <3")
-  end
-
+  @spec parse(String.t, integer) :: {:ok, Nadia.Model.Message.t} | {:error, Nadia.Model.Error.t | atom()}
+  defp parse("/graw" <> _, id), do: Nadia.send_message(id, "Graw <3")
   defp parse(message, id) do
-    result = case Botfuel.classify(message) do
-              [] ->
-                {:error, :nocommand}
-              results ->
-                hd(results) |> Map.get(:answer) |> parse_a
-            end
-
-    case result do
-      {:ok, :display_menus} ->
-        display_menus(id)
+    with {:ok, [result|_]}     <- Botfuel.classify(message),
+         {:ok, :display_menus} <- parse_answer(result) do
+          display_menus(id)
+    else
+      [] ->
+        {:error, :nocommand}
+      {:error, :wtf} ->
+        Logger.warn "Wooops, I didn't understand that category…"
+        {:error, :wtf}
+      {:error, :nocommand} ->
+        Logger.warn "No command was provided"
+        {:error, :nocommand}
       {:ok, category} when is_binary(category) ->
         Logger.debug(inspect category)
         category
         |> build_category()
         |> send_category(id)
-      {:error, :wtf} ->
-        Logger.warn "Wooops, I didn't understand."
-      {:error, :nocommand} ->
-        Logger.warn "Wooops, I didn't understand."
-      error -> Logger.error "Unmatched error: " <> (inspect error)
     end
   end
 
-  defp parse_a(json) do
+  @spec parse_answer(Botfuel.Classify.t) :: {:ok, String.t} | {:ok, :display_menus} | {:error, :wtf}
+  @spec parse_answer(String.t)           :: {:ok, String.t} | {:ok, :display_menus} | {:error, :wtf}
 
-    case Jason.decode!(json) |> Map.get("result") do
+  defp parse_answer(%{answer: answer}=response), do: parse_answer(answer)
+  defp parse_answer(answer) when is_binary(answer) do
+    case Jason.decode!(answer) |> Map.get("result") do
       "choice" -> {:ok, :display_menus}
       category when category in ["Mexican", "Ethiopian", "Fast Food", "Basque", "Café / Bistro",
                                  "Italian", "Asian", "Middle Eastern", "Vegetarian / Vegan", "Hotel Bar",
@@ -91,64 +90,5 @@ defmodule Gazoline.Telegram.RestoHandler do
         Logger.debug("Couldn't understand #{inspect msg}")
         {:error, :wtf}
     end
-  end
-
-  defp display_menus(id) do
-    {:ok, _} = Nadia.send_message(id, "Cool, what do you want?",
-                                reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: [[%{text: "Just snacking", callback_data: "/mealtype Snack"},
-                                                                                                  %{text: "A real meal.",  callback_data: "/mealtype Real"}]]})
-  end
-
-  ## Meta-categories ##
-  
-  defp send_meta_category("Snack", id, callback_id) do
-    %{id: id, callback_id: callback_id, keyboards: keyboards} = prepare_meta_category("Snack", id, callback_id)
-    :ok = Nadia.answer_callback_query(callback_id, text: ":-D")
-    Nadia.send_message id, "Here you are!", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards}
-  end
-
-  defp send_meta_category("Real", id, callback_id) do
-    %{id: id, callback_id: callback_id, keyboards: keyboards} = prepare_meta_category("Real", id, callback_id)
-    :ok = Nadia.answer_callback_query(callback_id, text: "\o/")
-    Nadia.send_message id, "You're all set!", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards}
-  end
-
-  defp prepare_meta_category(meta_category, id, callback_id) when meta_category in ["Snack", "Real"] do
-    keyboards = build_meta_category(meta_category)
-    %{id: id, callback_id: callback_id, keyboards: keyboards}
-  end
-
-  defp build_meta_category("Real") do
-    ["Mexican", "Ethiopian", "Fast Food", "Basque", "Café / Bistro",
-     "Italian", "Asian", "Middle Eastern", "Vegetarian / Vegan", "Hotel Bar", "Restaurant"]
-    |> Enum.chunk_every(1)
-    |> Enum.map(fn chunk ->
-      Enum.map(chunk, fn cat -> %{callback_data: "/category #{cat}", text: cat} end)
-    end)
-  end
-
-  defp build_meta_category("Snack") do
-    ["Fast Food", "Mexican", "Bakery", "Café / Bistro", "Coffee Shop"]
-    |> Enum.chunk_every(1)
-    |> Enum.map(fn chunk ->
-      Enum.map(chunk, fn cat -> %{callback_data: "/category #{cat}", text: cat} end)
-    end)
-  end
-
-  ## Single category ##
-
-  defp build_category(category) when is_binary(category) do
-    5
-    |> Geo.nth_closests(category)
-    |> Repo.all
-    |> Enum.map(fn resto -> %{fsquare: resto.fsquare, text: resto.name <> " — " <> resto.address} end)
-    |> Enum.chunk_every(1)
-    |> Enum.map(fn chunk ->
-      Enum.map(chunk, fn resto -> %{callback_data: "/restaurant #{resto.fsquare}", text: resto.text} end)
-    end)
-  end
-
-  defp send_category(keyboards, id) do
-    {:ok, _} = Nadia.send_message(id, "Check out those!", reply_markup: %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: keyboards})
   end
 end

@@ -31,7 +31,8 @@ defmodule Gazoline.MixProject do
       {:geo_postgis, "~> 1.1"},
       {:logger_syslog_backend, "~> 1.0.0"},
       {:nadia, "~> 0.4"},
-      {:postgrex, "~> 0.13"}
+      {:postgrex, "~> 0.13"},
+      {:stream_data, "~> 0.4.1", only: :test}
     ]
   end
 
@@ -39,7 +40,7 @@ defmodule Gazoline.MixProject do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate"],# "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      "test": ["ecto.create --quiet", "ecto.migrate", "test"]
+      "test": ["ecto.drop", "ecto.create --quiet", "ecto.migrate", "run test/seeds.exs", "test"]
     ]
   end
 
