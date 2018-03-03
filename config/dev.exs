@@ -7,3 +7,10 @@ config :gazoline, Gazoline.Repo,
   password: "postgres",
   hostname: "localhost",
   types: Gazoline.PostgresTypes
+
+config :logger,
+  backends: [:console, {LoggerSyslogBackend, :syslog}]
+
+config :logger, :syslog,
+  app_id: :gazoline,
+  path: "/dev/log"  

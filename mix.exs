@@ -29,6 +29,7 @@ defmodule Gazoline.MixProject do
       {:ecto, "~> 2.2"},
       {:geo, "~> 2.1"},
       {:geo_postgis, "~> 1.1"},
+      {:logger_syslog_backend, "~> 1.0.0"},
       {:nadia, "~> 0.4"},
       {:postgrex, "~> 0.13"}
     ]

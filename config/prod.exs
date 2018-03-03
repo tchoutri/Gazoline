@@ -7,3 +7,7 @@ config :gazoline, Gazoline.Repo,
   password: "postgres",
   hostname: "localhost",
   types: Gazoline.PostgresTypes
+
+config :logger, :syslog,
+  app_id: :gazoline,
+  path: "/dev/klog"  
