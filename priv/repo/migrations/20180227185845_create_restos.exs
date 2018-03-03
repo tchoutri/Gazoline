@@ -7,7 +7,7 @@ defmodule Gazoline.Repo.Migrations.CreateRestos do
       add :name,     :string, null: false
       add :address,  :string
       add :category, :string
-      add :geom,     :geometry
+      add :geom,     :geography
       add :fsquare,  :string
 
       timestamps()

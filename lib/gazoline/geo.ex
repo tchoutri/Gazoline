@@ -29,7 +29,10 @@ defmodule Gazoline.Geo do
   end
 
   def nth_closests(n) do
-    from restaurant in Restaurant, limit: ^n, select: %{fsquare: restaurant.fsquare, id: restaurant.id, name: restaurant.name, category: restaurant.category, address: restaurant.address}, order_by: st_distance(restaurant.geom, ^@telecom)
+    from restaurant in Restaurant, limit: ^n, select: %{fsquare: restaurant.fsquare,
+                                                        id: restaurant.id, name: restaurant.name,
+                                                        category: restaurant.category, address: restaurant.address},
+                                   order_by: st_distance(restaurant.geom, ^@telecom)
   end
 
   def nth_closests(n, "Asian") do
@@ -54,7 +57,6 @@ defmodule Gazoline.Geo do
 
   def venue_to_resto(venue) do
     [cat] = venue.categories |> Enum.filter(fn v -> v["primary"] == true end)
-
     %Gazoline.Restaurant{
     address: venue.location["formattedAddress"] |> Enum.join(" "),
     category: cat["shortName"],
@@ -62,5 +64,13 @@ defmodule Gazoline.Geo do
     name: venue.name,
     fsquare: venue.id
   }
+  end
+
+  def get_resto(venue_id: venue_id) do
+    telecom = "POINT(#{elem(@telecom.coordinates,0)} #{elem(@telecom.coordinates, 1)})"
+    Repo.all from r in Restaurant, where: r.fsquare == ^venue_id,
+                              select: %{name: r.name, address: r.address,
+                                  distance: fragment("round(cast(ST_Distance(?,ST_GeographyFromText(?)) as numeric),1)", r.geom, ^telecom),
+                                  geom: r.geom, fsquare: r.fsquare}
   end
 end

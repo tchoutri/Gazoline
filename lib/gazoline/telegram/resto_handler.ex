@@ -1,7 +1,7 @@
 defmodule Gazoline.Telegram.RestoHandler do
 
   use GenServer
-  alias Gazoline.{Repo, Restaurant}
+  alias Gazoline.{Repo, Restaurant,Geo}
   require Logger
   import Gazoline.Telegram.Helpers
 
@@ -29,11 +29,12 @@ defmodule Gazoline.Telegram.RestoHandler do
 
   defp parse_callback("/restaurant " <> venue_id, id, callback_id) do
     :ok = Nadia.answer_callback_query(callback_id, text: "~o~")
-    case Repo.get_by(Restaurant, fsquare: venue_id) do
+    case Geo.get_resto(venue_id: venue_id) do
       nil -> nil
-      %Restaurant{}=resto ->
+      [resto] ->
         {lat, long} = resto.geom.coordinates
-        {:ok, _}    = Nadia.send_venue(id, lat, long, resto.name, resto.address, foursquare_id: resto.fsquare)
+        {:ok, _}    =
+          Nadia.send_venue(id, lat, long, "#{resto.name} (#{resto.distance}m)" , resto.address, foursquare_id: resto.fsquare)
     end
   end
 
@@ -79,7 +80,7 @@ defmodule Gazoline.Telegram.RestoHandler do
   @spec parse_answer(Botfuel.Classify.t) :: {:ok, String.t} | {:ok, :display_menus} | {:error, :wtf}
   @spec parse_answer(String.t)           :: {:ok, String.t} | {:ok, :display_menus} | {:error, :wtf}
 
-  defp parse_answer(%{answer: answer}=response), do: parse_answer(answer)
+  defp parse_answer(%{answer: answer}=_response), do: parse_answer(answer)
   defp parse_answer(answer) when is_binary(answer) do
     case Jason.decode!(answer) |> Map.get("result") do
       "choice" -> {:ok, :display_menus}
