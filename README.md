@@ -41,3 +41,4 @@ BTFL_APPKEY
 
 - [ ] Expand the search radius.
 - [ ] Don't crash on message edition
+- [ ] Don't be limited to one location.
