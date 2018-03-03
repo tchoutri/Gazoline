@@ -73,4 +73,15 @@ defmodule Gazoline.Telegram.Helpers do
   end
 
   def get_lat_long(%Geo.Point{coordinates: {lat, long}}), do: {lat, long}
+
+  def send_help(id) do
+    msg = """
+    <b>Help section</b>
+    You can lookup a restaurant by its name with
+    <code>/resto &lt;string&gt;</code>
+    You can display the interactive menu by typing
+    <code>/start</code>
+    """
+    {:ok, _} = Nadia.send_message(id, msg, parse_mode: "html")
+  end
 end

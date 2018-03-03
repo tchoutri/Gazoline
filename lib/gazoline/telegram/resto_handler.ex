@@ -20,15 +20,18 @@ defmodule Gazoline.Telegram.RestoHandler do
     cond do
       update.edited_message != nil -> parse(update.edited_message.text, update.message.chat.id)
       update.callback_query != nil -> parse_callback(update.callback_query.data, update.callback_query.message.chat.id, update.callback_query.id)
-      update.message.text == "/start" -> display_menus(update.message.chat.id)
-      "/resto " <> string = update.message.text -> parse_command(:resto, string, update.message.chat.id)
+
+      update.message.text == "/start"              -> display_menus(update.message.chat.id)
+      String.starts_with?(update.message.text, "/") -> parse_command(update.message.text, update.message.chat.id)
+
       update.message != nil -> parse(update.message.text, update.message.chat.id)
       true -> nil
     end
     {:noreply, state}
   end
 
-  defp parse_command(:resto, string, id) do
+  defp parse_command("/resto " <> string, id) do
+    Logger.debug("Looking up #{string}")
     case get_resto(approx: string) do
       []      -> Nadia.send_message(id, "You're sure it's spelled like that? :/")
       results -> 
@@ -37,6 +40,11 @@ defmodule Gazoline.Telegram.RestoHandler do
         Nadia.send_venue(id, lat, long, "#{resto.name} (#{resto.distance}m)" , resto.address, foursquare_id: resto.fsquare)
       end)
     end
+  end
+
+  defp parse_command(msg, id) do
+    Logger.debug("Couldn't parse command: " <> msg)
+    send_help(id)
   end
 
 
