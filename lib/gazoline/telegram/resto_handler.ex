@@ -82,7 +82,7 @@ defmodule Gazoline.Telegram.RestoHandler do
          {:ok, :display_menus} <- parse_answer(result) do
           display_menus(id)
     else
-      [] ->
+      {:ok, []} ->
         {:error, :nocommand}
       {:error, :wtf} ->
         Logger.warn "Wooops, I didn't understand that category…"

@@ -81,6 +81,8 @@ defmodule Gazoline.Telegram.Helpers do
     <code>/resto &lt;string&gt;</code>
     You can display the interactive menu by typing
     <code>/start</code>
+    But you can also tell the bot that you're hungry, that you want asian food, fast-food,
+    find a café or just a restaurant, and it will provide you with the best results it has!
     """
     {:ok, _} = Nadia.send_message(id, msg, parse_mode: "html")
   end
