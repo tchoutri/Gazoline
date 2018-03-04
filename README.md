@@ -39,6 +39,7 @@ BTFL_APPKEY
 
 ## TODO
 
-- [ ] Expand the search radius.
-- [ ] Don't crash on message edition
+- [ ] Expand the search radius (despite 4square's API).
+- [ ] Don't crash on message edition (not really an issue but hey)
 - [ ] Don't be limited to one location.
+- [ ] A way to easily (in-chat) add a restaurant.
