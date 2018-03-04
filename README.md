@@ -47,3 +47,4 @@ BTFL_APPKEY
 - [ ] Don't crash on message edition (not really an issue but hey)
 - [ ] Don't be limited to one location.
 - [ ] A way to easily (in-chat) add a restaurant.
+- [ ] Enable botmeter metrics.
