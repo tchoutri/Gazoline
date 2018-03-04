@@ -9,6 +9,10 @@ data, and PostgreSQL's *PostGIS* extension.
 
 It helps you pick restaurants around Paris' neighbourhood *La Butte aux Cailles*, by type.
 
+![Image 1](https://i.imgur.com/upXJkp6.png)
+![Image 2](https://i.imgur.com/zTmPBDR.png)
+
+
 ## Prerequesites
 
 minimum dependencies:
